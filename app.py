@@ -293,8 +293,8 @@ def generate_monthly_print_view(df: pd.DataFrame, month: int, year: int) -> str:
         <style>
             @media print {{
                 @page {{ 
-                    size: letter;
-                    margin: 0.3in; 
+                    size: letter landscape;
+                    margin: 0.4in; 
                 }}
                 body {{ margin: 0; }}
                 .no-print {{ display: none; }}
@@ -304,18 +304,18 @@ def generate_monthly_print_view(df: pd.DataFrame, month: int, year: int) -> str:
                 font-family: Arial, sans-serif;
                 padding: 10px;
                 background: white;
-                max-width: 8.5in;
+                max-width: 10.2in;
                 margin: 0 auto;
             }}
             
             .header {{
                 text-align: center;
-                margin-bottom: 8px;
+                margin-bottom: 10px;
             }}
             
             .header h2 {{
                 margin: 0;
-                font-size: 14px;
+                font-size: 16px;
                 color: #333;
                 font-weight: 600;
             }}
@@ -323,46 +323,49 @@ def generate_monthly_print_view(df: pd.DataFrame, month: int, year: int) -> str:
             .calendar-table {{
                 width: 100%;
                 border-collapse: collapse;
+                table-layout: fixed;
                 margin-bottom: 10px;
             }}
             
             .calendar-table th {{
                 background-color: #2563eb;
                 color: white;
-                padding: 4px;
+                padding: 6px;
                 text-align: center;
                 border: 1px solid #999;
-                font-size: 10px;
+                font-size: 11px;
+                width: 14.28%;
             }}
             
             .calendar-table td {{
                 border: 1px solid #999;
-                padding: 4px;
+                padding: 5px;
                 vertical-align: top;
-                height: 95px;
+                width: 14.28%;
+                height: 105px;
             }}
             
             .date-number {{
                 font-weight: bold;
-                font-size: 11px;
-                margin-bottom: 3px;
+                font-size: 12px;
+                margin-bottom: 4px;
                 color: #333;
             }}
             
             .event-item {{
-                margin-bottom: 4px;
-                padding: 3px 4px;
+                margin-bottom: 5px;
+                padding: 4px;
                 border-radius: 3px;
                 font-size: 9px;
-                line-height: 1.2;
+                line-height: 1.3;
             }}
             
-            .status-open {{ background-color: #dbeafe; border-left: 2px solid #2563eb; }}
-            .status-inprogress {{ background-color: #fed7aa; border-left: 2px solid #d97706; }}
-            .status-completed {{ background-color: #dcfce7; border-left: 2px solid #16a34a; }}
-            .status-onhold {{ background-color: #e5e7eb; border-left: 2px solid #6b7280; }}
-            .status-cancelled {{ background-color: #fee2e2; border-left: 2px solid #dc2626; }}
-            .status-default {{ background-color: #ccfbf1; border-left: 2px solid #0f766e; }}
+            .status-open {{ background-color: #dbeafe; border-left: 3px solid #2563eb; }}
+            .status-inprogress {{ background-color: #fed7aa; border-left: 3px solid #d97706; }}
+            .status-completed {{ background-color: #dcfce7; border-left: 3px solid #16a34a; }}
+            .status-onhold {{ background-color: #e5e7eb; border-left: 3px solid #6b7280; }}
+            .status-cancelled {{ background-color: #fee2e2; border-left: 3px solid #dc2626; }}
+            .status-default {{ background-color: #ccfbf1; border-left: 3px solid #0f766e; }}
             
             .event-wo {{
                 font-weight: bold;
@@ -382,8 +385,8 @@ def generate_monthly_print_view(df: pd.DataFrame, month: int, year: int) -> str:
             }}
             
             .legend {{
-                margin-top: 8px;
-                padding: 8px;
+                margin-top: 10px;
+                padding: 10px;
                 background-color: #f9fafb;
                 border: 1px solid #ddd;
                 border-radius: 3px;
@@ -391,26 +394,26 @@ def generate_monthly_print_view(df: pd.DataFrame, month: int, year: int) -> str:
             
             .legend-title {{
                 font-weight: bold;
-                margin-bottom: 6px;
-                font-size: 10px;
+                margin-bottom: 8px;
+                font-size: 11px;
             }}
             
             .legend-items {{
                 display: flex;
                 flex-wrap: wrap;
-                gap: 10px;
+                gap: 12px;
             }}
             
             .legend-item {{
                 display: flex;
                 align-items: center;
-                gap: 4px;
-                font-size: 9px;
+                gap: 5px;
+                font-size: 10px;
             }}
             
             .legend-color {{
-                width: 15px;
-                height: 15px;
+                width: 16px;
+                height: 16px;
                 border-radius: 2px;
             }}
         </style>
@@ -423,13 +426,13 @@ def generate_monthly_print_view(df: pd.DataFrame, month: int, year: int) -> str:
         <table class="calendar-table">
             <thead>
                 <tr>
-                    <th>Sun</th>
-                    <th>Mon</th>
-                    <th>Tue</th>
-                    <th>Wed</th>
-                    <th>Thu</th>
-                    <th>Fri</th>
-                    <th>Sat</th>
+                    <th>Sunday</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                    <th>Saturday</th>
                 </tr>
             </thead>
             <tbody>
