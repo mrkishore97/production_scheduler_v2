@@ -300,6 +300,12 @@ def generate_monthly_print_view(df: pd.DataFrame, month: int, year: int) -> str:
                 .no-print {{ display: none; }}
             }}
             
+            * {{
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }}
+            
             body {{
                 font-family: Arial, sans-serif;
                 padding: 10px;
