@@ -289,137 +289,147 @@ def generate_monthly_print_view(df: pd.DataFrame, month: int, year: int) -> str:
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Production Schedule - {month_name}</title>
+        <title>{month_name}</title>
         <style>
             @media print {{
-                @page {{ margin: 0.5in; }}
+                @page {{ 
+                    size: letter;
+                    margin: 0.3in; 
+                }}
                 body {{ margin: 0; }}
+                .no-print {{ display: none; }}
             }}
             
             body {{
                 font-family: Arial, sans-serif;
-                padding: 20px;
+                padding: 10px;
                 background: white;
+                max-width: 8.5in;
+                margin: 0 auto;
             }}
             
             .header {{
                 text-align: center;
-                margin-bottom: 30px;
-                border-bottom: 3px solid #333;
-                padding-bottom: 10px;
+                margin-bottom: 8px;
             }}
             
-            .header h1 {{
+            .header h2 {{
                 margin: 0;
+                font-size: 14px;
                 color: #333;
+                font-weight: 600;
             }}
             
             .calendar-table {{
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 20px;
+                margin-bottom: 10px;
             }}
             
             .calendar-table th {{
                 background-color: #2563eb;
                 color: white;
-                padding: 10px;
+                padding: 4px;
                 text-align: center;
-                border: 1px solid #ddd;
+                border: 1px solid #999;
+                font-size: 10px;
             }}
             
             .calendar-table td {{
-                border: 1px solid #ddd;
-                padding: 8px;
+                border: 1px solid #999;
+                padding: 4px;
                 vertical-align: top;
-                min-height: 100px;
-                height: 120px;
+                height: 95px;
             }}
             
             .date-number {{
                 font-weight: bold;
-                font-size: 16px;
-                margin-bottom: 5px;
+                font-size: 11px;
+                margin-bottom: 3px;
                 color: #333;
             }}
             
             .event-item {{
-                margin-bottom: 8px;
-                padding: 6px;
-                border-radius: 4px;
-                font-size: 11px;
-                line-height: 1.3;
+                margin-bottom: 4px;
+                padding: 3px 4px;
+                border-radius: 3px;
+                font-size: 9px;
+                line-height: 1.2;
             }}
             
-            .status-open {{ background-color: #dbeafe; border-left: 3px solid #2563eb; }}
-            .status-inprogress {{ background-color: #fed7aa; border-left: 3px solid #d97706; }}
-            .status-completed {{ background-color: #dcfce7; border-left: 3px solid #16a34a; }}
-            .status-onhold {{ background-color: #e5e7eb; border-left: 3px solid #6b7280; }}
-            .status-cancelled {{ background-color: #fee2e2; border-left: 3px solid #dc2626; }}
-            .status-default {{ background-color: #ccfbf1; border-left: 3px solid #0f766e; }}
+            .status-open {{ background-color: #dbeafe; border-left: 2px solid #2563eb; }}
+            .status-inprogress {{ background-color: #fed7aa; border-left: 2px solid #d97706; }}
+            .status-completed {{ background-color: #dcfce7; border-left: 2px solid #16a34a; }}
+            .status-onhold {{ background-color: #e5e7eb; border-left: 2px solid #6b7280; }}
+            .status-cancelled {{ background-color: #fee2e2; border-left: 2px solid #dc2626; }}
+            .status-default {{ background-color: #ccfbf1; border-left: 2px solid #0f766e; }}
             
             .event-wo {{
                 font-weight: bold;
-                color: #1f2937;
+                color: #000;
+                font-size: 10px;
             }}
             
             .event-customer {{
-                color: #4b5563;
+                color: #1f2937;
+                font-size: 9.5px;
+                font-weight: 500;
             }}
             
             .event-model {{
-                color: #6b7280;
-                font-style: italic;
+                color: #374151;
+                font-size: 9px;
             }}
             
             .legend {{
-                margin-top: 20px;
-                padding: 15px;
+                margin-top: 8px;
+                padding: 8px;
                 background-color: #f9fafb;
                 border: 1px solid #ddd;
-                border-radius: 4px;
+                border-radius: 3px;
             }}
             
             .legend-title {{
                 font-weight: bold;
-                margin-bottom: 10px;
+                margin-bottom: 6px;
+                font-size: 10px;
             }}
             
             .legend-items {{
                 display: flex;
                 flex-wrap: wrap;
-                gap: 15px;
+                gap: 10px;
             }}
             
             .legend-item {{
                 display: flex;
                 align-items: center;
-                gap: 5px;
+                gap: 4px;
+                font-size: 9px;
             }}
             
             .legend-color {{
-                width: 20px;
-                height: 20px;
-                border-radius: 3px;
+                width: 15px;
+                height: 15px;
+                border-radius: 2px;
             }}
         </style>
     </head>
     <body>
         <div class="header">
-            <h1>Production Schedule</h1>
             <h2>{month_name}</h2>
         </div>
         
         <table class="calendar-table">
             <thead>
                 <tr>
-                    <th>Sunday</th>
-                    <th>Monday</th>
-                    <th>Tuesday</th>
-                    <th>Wednesday</th>
-                    <th>Thursday</th>
-                    <th>Friday</th>
-                    <th>Saturday</th>
+                    <th>Sun</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
                 </tr>
             </thead>
             <tbody>
@@ -518,6 +528,8 @@ if "last_applied_change" not in st.session_state:
     st.session_state.last_applied_change = None
 if "has_unsaved_changes" not in st.session_state:
     st.session_state.has_unsaved_changes = False
+if "show_print_preview" not in st.session_state:
+    st.session_state.show_print_preview = False
 
 
 # ---------------- Sidebar ----------------
@@ -530,46 +542,6 @@ with st.sidebar:
     else:
         st.caption("No data loaded yet.")
 
-    st.divider()
-    
-    # Monthly Print View
-    st.subheader("🖨️ Print Monthly Schedule")
-    st.caption("Generate a printable calendar for production distribution")
-    
-    print_col1, print_col2 = st.columns(2)
-    with print_col1:
-        print_month = st.selectbox(
-            "Month",
-            range(1, 13),
-            format_func=lambda x: datetime(2000, x, 1).strftime("%B"),
-            key="print_month",
-            index=datetime.now().month - 1
-        )
-    with print_col2:
-        print_year = st.number_input(
-            "Year",
-            min_value=2020,
-            max_value=2030,
-            value=datetime.now().year,
-            key="print_year"
-        )
-    
-    if st.button("📄 Generate Print View", use_container_width=True):
-        html_content = generate_monthly_print_view(st.session_state.df, print_month, print_year)
-        month_name = datetime(print_year, print_month, 1).strftime("%B_%Y")
-        
-        st.download_button(
-            label="💾 Download HTML",
-            data=html_content,
-            file_name=f"production_schedule_{month_name}.html",
-            mime="text/html",
-            use_container_width=True,
-            help="Download and open in browser to print"
-        )
-        
-        with st.expander("Preview Print View", expanded=False):
-            st.components.v1.html(html_content, height=800, scrolling=True)
-    
     st.divider()
     
     # Password-protected clear data
@@ -695,3 +667,53 @@ st.download_button(
     file_name="order_book_updated.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
+
+st.divider()
+
+# ---------------- Monthly Print View ----------------
+st.subheader("🖨️ Print Monthly Schedule")
+st.caption("Generate a printable calendar for production distribution")
+
+print_col1, print_col2, print_col3 = st.columns([2, 2, 3])
+with print_col1:
+    print_month = st.selectbox(
+        "Month",
+        range(1, 13),
+        format_func=lambda x: datetime(2000, x, 1).strftime("%B"),
+        key="print_month",
+        index=datetime.now().month - 1
+    )
+with print_col2:
+    print_year = st.number_input(
+        "Year",
+        min_value=2020,
+        max_value=2030,
+        value=datetime.now().year,
+        key="print_year"
+    )
+with print_col3:
+    st.write("")  # Spacer
+    generate_btn = st.button("📄 Generate Print View", type="primary")
+
+if generate_btn:
+    st.session_state.show_print_preview = True
+    st.session_state.print_html = generate_monthly_print_view(st.session_state.df, print_month, print_year)
+    st.session_state.print_month_name = datetime(print_year, print_month, 1).strftime("%B_%Y")
+
+if "show_print_preview" in st.session_state and st.session_state.show_print_preview:
+    col_dl, col_hide = st.columns([1, 4])
+    with col_dl:
+        st.download_button(
+            label="💾 Download HTML to Print",
+            data=st.session_state.print_html,
+            file_name=f"production_schedule_{st.session_state.print_month_name}.html",
+            mime="text/html",
+            help="Download and open in browser, then use Ctrl+P (Cmd+P on Mac) to print"
+        )
+    with col_hide:
+        if st.button("Hide Preview"):
+            st.session_state.show_print_preview = False
+            st.rerun()
+    
+    st.info("👁️ Preview below - Download the HTML file and open in your browser to print with proper formatting")
+    st.components.v1.html(st.session_state.print_html, height=1000, scrolling=True)
