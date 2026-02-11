@@ -194,12 +194,36 @@ def normalize_df(df: pd.DataFrame) -> pd.DataFrame:
         raise KeyError(f"Missing columns: {missing}")
 
     ordered = REQUIRED_COLS + [c for c in df.columns if c not in REQUIRED_COLS]
-    df = df[ordered]
-    df["WO"] = df["WO"].astype(str).str.strip()
+    df = df[ordered].copy()
+
+    # Remove spreadsheet footer/blank rows before type coercion.
+    df = df.dropna(how="all", subset=REQUIRED_COLS)
+
+    text_cols = ["WO", "Quote", "PO Number", "Status", "Customer Name", "Model Description"]
+    for c in text_cols:
+        df[c] = df[c].where(df[c].notna(), "").astype(str).str.strip()
+        df[c] = df[c].replace({"nan": "", "NaN": "", "None": "", "<NA>": ""})
+
     df["Scheduled Date"] = df["Scheduled Date"].apply(parse_date_to_date)
     df["Price"] = df["Price"].apply(parse_price_to_float)
-    for c in ["Quote", "PO Number", "Status", "Customer Name", "Model Description"]:
-        df[c] = df[c].fillna("").astype(str)
+
+    # Drop Excel summary rows (e.g., WO count + total price footer).
+    summary_like = (
+        df["WO"].str.fullmatch(r"\d+")
+        & df["Quote"].eq("")
+        & df["PO Number"].eq("")
+        & df["Status"].eq("")
+        & df["Customer Name"].eq("")
+        & df["Model Description"].eq("")
+        & df["Scheduled Date"].isna()
+        & df["Price"].notna()
+    )
+    df = df[~summary_like]
+
+    # Remove trailing empty-looking rows that became blanks after cleanup.
+    blank_text = df[["WO", "Quote", "PO Number", "Status", "Customer Name", "Model Description"]].eq("").all(axis=1)
+    df = df[~(blank_text & df["Scheduled Date"].isna() & df["Price"].isna())]
+
     return df
 
 
