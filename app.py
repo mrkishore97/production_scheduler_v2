@@ -3,6 +3,7 @@
 import io
 import re
 from datetime import datetime, date
+from calendar import monthrange
 
 import pandas as pd
 import streamlit as st
@@ -252,6 +253,257 @@ def build_excel_bytes(df: pd.DataFrame) -> bytes:
     return buf.getvalue()
 
 
+def generate_monthly_print_view(df: pd.DataFrame, month: int, year: int) -> str:
+    """Generate HTML for a printable monthly calendar view."""
+    month_name = datetime(year, month, 1).strftime("%B %Y")
+    
+    # Filter data for the selected month
+    df_month = df[
+        (pd.to_datetime(df["Scheduled Date"], errors="coerce").dt.month == month) &
+        (pd.to_datetime(df["Scheduled Date"], errors="coerce").dt.year == year)
+    ].copy()
+    
+    # Group by date
+    events_by_date = {}
+    for _, row in df_month.iterrows():
+        d = row["Scheduled Date"]
+        if pd.isna(d):
+            continue
+        date_key = d.isoformat()
+        if date_key not in events_by_date:
+            events_by_date[date_key] = []
+        
+        wo = str(row.get("WO", "")).strip()
+        cust = str(row.get("Customer Name", "")).strip()
+        model = str(row.get("Model Description", "")).strip()
+        status = str(row.get("Status", "")).strip()
+        
+        events_by_date[date_key].append({
+            "wo": wo,
+            "customer": cust,
+            "model": model,
+            "status": status,
+        })
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Production Schedule - {month_name}</title>
+        <style>
+            @media print {{
+                @page {{ margin: 0.5in; }}
+                body {{ margin: 0; }}
+            }}
+            
+            body {{
+                font-family: Arial, sans-serif;
+                padding: 20px;
+                background: white;
+            }}
+            
+            .header {{
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 3px solid #333;
+                padding-bottom: 10px;
+            }}
+            
+            .header h1 {{
+                margin: 0;
+                color: #333;
+            }}
+            
+            .calendar-table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }}
+            
+            .calendar-table th {{
+                background-color: #2563eb;
+                color: white;
+                padding: 10px;
+                text-align: center;
+                border: 1px solid #ddd;
+            }}
+            
+            .calendar-table td {{
+                border: 1px solid #ddd;
+                padding: 8px;
+                vertical-align: top;
+                min-height: 100px;
+                height: 120px;
+            }}
+            
+            .date-number {{
+                font-weight: bold;
+                font-size: 16px;
+                margin-bottom: 5px;
+                color: #333;
+            }}
+            
+            .event-item {{
+                margin-bottom: 8px;
+                padding: 6px;
+                border-radius: 4px;
+                font-size: 11px;
+                line-height: 1.3;
+            }}
+            
+            .status-open {{ background-color: #dbeafe; border-left: 3px solid #2563eb; }}
+            .status-inprogress {{ background-color: #fed7aa; border-left: 3px solid #d97706; }}
+            .status-completed {{ background-color: #dcfce7; border-left: 3px solid #16a34a; }}
+            .status-onhold {{ background-color: #e5e7eb; border-left: 3px solid #6b7280; }}
+            .status-cancelled {{ background-color: #fee2e2; border-left: 3px solid #dc2626; }}
+            .status-default {{ background-color: #ccfbf1; border-left: 3px solid #0f766e; }}
+            
+            .event-wo {{
+                font-weight: bold;
+                color: #1f2937;
+            }}
+            
+            .event-customer {{
+                color: #4b5563;
+            }}
+            
+            .event-model {{
+                color: #6b7280;
+                font-style: italic;
+            }}
+            
+            .legend {{
+                margin-top: 20px;
+                padding: 15px;
+                background-color: #f9fafb;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }}
+            
+            .legend-title {{
+                font-weight: bold;
+                margin-bottom: 10px;
+            }}
+            
+            .legend-items {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px;
+            }}
+            
+            .legend-item {{
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }}
+            
+            .legend-color {{
+                width: 20px;
+                height: 20px;
+                border-radius: 3px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>Production Schedule</h1>
+            <h2>{month_name}</h2>
+        </div>
+        
+        <table class="calendar-table">
+            <thead>
+                <tr>
+                    <th>Sunday</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                    <th>Saturday</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    # Get the first day of the month and number of days
+    first_day_weekday = datetime(year, month, 1).weekday()
+    # Adjust for Sunday being 0
+    first_day_weekday = (first_day_weekday + 1) % 7
+    num_days = monthrange(year, month)[1]
+    
+    # Build calendar grid
+    current_day = 1
+    weeks_needed = ((num_days + first_day_weekday) // 7) + (1 if (num_days + first_day_weekday) % 7 > 0 else 0)
+    
+    for week in range(weeks_needed):
+        html += "<tr>"
+        for day_of_week in range(7):
+            if week == 0 and day_of_week < first_day_weekday:
+                html += "<td></td>"
+            elif current_day > num_days:
+                html += "<td></td>"
+            else:
+                date_obj = date(year, month, current_day)
+                date_str = date_obj.isoformat()
+                
+                html += f'<td><div class="date-number">{current_day}</div>'
+                
+                if date_str in events_by_date:
+                    for event in events_by_date[date_str]:
+                        status_class = normalize_status_key(event["status"]).replace(" ", "")
+                        html += f'<div class="event-item status-{status_class}">'
+                        html += f'<div class="event-wo">WO: {event["wo"]}</div>'
+                        if event["customer"]:
+                            html += f'<div class="event-customer">{event["customer"]}</div>'
+                        if event["model"]:
+                            html += f'<div class="event-model">{event["model"]}</div>'
+                        html += '</div>'
+                
+                html += '</td>'
+                current_day += 1
+        html += "</tr>"
+    
+    html += """
+            </tbody>
+        </table>
+        
+        <div class="legend">
+            <div class="legend-title">Status Legend:</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #2563eb;"></div>
+                    <span>Open</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #d97706;"></div>
+                    <span>In Progress</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #16a34a;"></div>
+                    <span>Completed</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #6b7280;"></div>
+                    <span>On Hold</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #dc2626;"></div>
+                    <span>Cancelled</span>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            // Optional: Auto-print on load
+            // window.onload = function() { window.print(); }
+        </script>
+    </body>
+    </html>
+    """
+    
+    return html
+
+
 # ---------------- Session Init ----------------
 if "df" not in st.session_state:
     with st.spinner("Loading saved data..."):
@@ -278,6 +530,46 @@ with st.sidebar:
     else:
         st.caption("No data loaded yet.")
 
+    st.divider()
+    
+    # Monthly Print View
+    st.subheader("🖨️ Print Monthly Schedule")
+    st.caption("Generate a printable calendar for production distribution")
+    
+    print_col1, print_col2 = st.columns(2)
+    with print_col1:
+        print_month = st.selectbox(
+            "Month",
+            range(1, 13),
+            format_func=lambda x: datetime(2000, x, 1).strftime("%B"),
+            key="print_month",
+            index=datetime.now().month - 1
+        )
+    with print_col2:
+        print_year = st.number_input(
+            "Year",
+            min_value=2020,
+            max_value=2030,
+            value=datetime.now().year,
+            key="print_year"
+        )
+    
+    if st.button("📄 Generate Print View", use_container_width=True):
+        html_content = generate_monthly_print_view(st.session_state.df, print_month, print_year)
+        month_name = datetime(print_year, print_month, 1).strftime("%B_%Y")
+        
+        st.download_button(
+            label="💾 Download HTML",
+            data=html_content,
+            file_name=f"production_schedule_{month_name}.html",
+            mime="text/html",
+            use_container_width=True,
+            help="Download and open in browser to print"
+        )
+        
+        with st.expander("Preview Print View", expanded=False):
+            st.components.v1.html(html_content, height=800, scrolling=True)
+    
     st.divider()
     
     # Password-protected clear data
