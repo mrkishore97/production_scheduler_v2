@@ -113,11 +113,28 @@ def parse_price(x):
 def normalize_df(df):
     df = df.copy()
     df = df[REQUIRED_COLS]
-    df["WO"] = df["WO"].astype(str).str.strip()
+
+    text_cols = ["WO", "Quote", "PO Number", "Status", "Customer Name", "Model Description"]
+    for c in text_cols:
+        df[c] = df[c].where(df[c].notna(), "").astype(str).str.strip()
+        df[c] = df[c].replace({"nan": "", "NaN": "", "None": "", "<NA>": ""})
+
     df["Scheduled Date"] = df["Scheduled Date"].apply(parse_date)
     df["Price"] = df["Price"].apply(parse_price)
-    for c in ["Quote", "PO Number", "Status", "Customer Name", "Model Description"]:
-        df[c] = df[c].fillna("").astype(str)
+
+    summary_like = (
+        df["WO"].str.fullmatch(r"\d+")
+        & df["Quote"].eq("")
+        & df["PO Number"].eq("")
+        & df["Status"].eq("")
+        & df["Customer Name"].eq("")
+        & df["Model Description"].eq("")
+        & df["Scheduled Date"].isna()
+        & df["Price"].notna()
+    )
+    blank_text = df[["WO", "Quote", "PO Number", "Status", "Customer Name", "Model Description"]].eq("").all(axis=1)
+    df = df[~(summary_like | (blank_text & df["Scheduled Date"].isna() & df["Price"].isna()))]
+
     return df
 
 
